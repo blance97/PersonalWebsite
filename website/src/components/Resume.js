@@ -31,7 +31,7 @@ export default class Resume extends Component {
     this.state = {
       languages: [
         { label: 'Javascript' },
-        { label: 'Node JS' },
+        { label: 'Node.js' },
         { label: 'React/Redux' },
         { label: 'React Native' },
         { label: 'Python' },
@@ -43,6 +43,7 @@ export default class Resume extends Component {
         { label: 'GIT' },
         { label: 'SVN' },
         { label: 'MySQL' },
+        { label: 'Firebase' },
         { label: 'Postgresql' },
         { label: 'sqlite' },
         { label: 'Heroku' },

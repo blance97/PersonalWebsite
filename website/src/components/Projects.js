@@ -1,4 +1,4 @@
-import React,{Component} from 'react';
+import React, { Component } from 'react';
 import Divider from 'material-ui/Divider';
 import Project from './Project';
 
@@ -26,7 +26,7 @@ export default class Projects extends Component {
                         skills={[
                             { label: "React JS" },
                             { label: "Redux" },
-                            { label: "Node JS" },
+                            { label: "Node.js" },
                             { label: "Express" },
                             { label: "Javascript" },
                             { label: "Webpack" },
@@ -39,12 +39,25 @@ export default class Projects extends Component {
                         siteLink={"https://digitalreceipt.herokuapp.com/"}
                     />
                     <Project
+                        projectName={'Food Poll'}
+                        projectDescription={`A poll app that will gather info from people on their food preferences and suggest places based of the results`}
+                        fromDate={"Summer 2017 - Present"}
+                        skills={[
+                            { label: "React JS" },
+                            { label: "Javascript" },
+                            { label: "Firebase" },
+                            { label: "React Native" },
+                        ]}
+                        githubLink={"https://github.com/blance97/foodpoll"}
+                        siteLink={"https://foodpoll.herokuapp.com"}
+                    />
+                    <Project
                         projectName={'Echo Flow'}
                         projectDescription={`An on going project where we attempt to get Google's Tensorflow to detect faces and have an Amazon Echo speak that persons name.`}
                         fromDate={"Summer 2017 - Present"}
                         skills={[
                             { label: "React JS" },
-                            { label: "Javasciprt" },
+                            { label: "Javascript" },
                             { label: "Amazon S3" },
                             { label: "Tensorflow" },
                             { label: "Python" }

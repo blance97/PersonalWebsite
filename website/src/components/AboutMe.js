@@ -87,7 +87,7 @@ export default class AboutMe extends Component {
                                 <blockquote> {"Major: Computer Science,"}</blockquote>
                                 <blockquote> {"Education: Rose-Hulman Institude of Technology,"}</blockquote>
                                 <blockquote> {"Expected Graduation: 2019,"}</blockquote>
-                                <blockquote> {"Notable Projects: [Digital Receipt , EchoFlow , Off],"}</blockquote>
+                                <blockquote> {"Notable Projects: [Digital Receipt, Food Poll,EchoFlow, Off],"}</blockquote>
                                 <blockquote> {"Intrests: [Programing,React JS, Basketball, Sleep, Games, Swimming],"}</blockquote>
                                 <blockquote> {"Latest Place of Employment: Software Developer at Linbeck LLC,"}</blockquote>
                                 <blockquote>"Resume": <a href="https://drive.google.com/file/d/0B-059HcFncdNS1VLS0ZhWEVFTW8/view?usp=sharing" target="_blank" rel="noopener noreferrer" style={{ color: "#42a5f5" }}>"My Resume"</a></blockquote>
