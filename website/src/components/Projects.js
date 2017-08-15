@@ -46,10 +46,23 @@ export default class Projects extends Component {
                             { label: "React JS" },
                             { label: "Javascript" },
                             { label: "Firebase" },
-                            { label: "React Native" },
+                            { label: "Google Places API" }
                         ]}
                         githubLink={"https://github.com/blance97/foodpoll"}
                         siteLink={"https://foodpoll.herokuapp.com"}
+                    />
+                    <Project
+                        projectName={'Food Poll (Mobile)'}
+                        projectDescription={`A Mobile version of foodPoll build with react-native`}
+                        fromDate={"Summer 2017 - Present"}
+                        skills={[
+                            { label: "React Native" },
+                            { label: "React JS" },
+                            { label: "Javascript" },
+                            { label: "Firebase" },
+                            { label: "Google Places API" }
+                        ]}
+                        githubLink={"https://github.com/blance97/FoodPollNative"}
                     />
                     <Project
                         projectName={'Echo Flow'}
