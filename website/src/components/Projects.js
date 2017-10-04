@@ -21,7 +21,7 @@ export default class Projects extends Component {
                     <Divider style={{ color: 'black', marginBottom: 40 }} />
                     <Project
                         projectName={'FoodPhoria(Mhacks)'}
-                        projectDescription={`This is a is an web application that allows users to create shareable polls that survey the food preferences of link holders and displays the running results, using these results to eventually drive an AI that provides recommendations on where to eat. These results are only displayed with context to the group, not with details about individuals, thereby avoiding the aforementioned social balancing act. In doing so, Foodphoria looks to bring the joy back to eating out with your friends.`}
+                        projectDescription={`This is an web application that allows users to create shareable polls that survey the food preferences of link holders and displays the running results, using these results to eventually drive an AI that provides recommendations on where to eat. These results are only displayed with context to the group, not with details about individuals, thereby avoiding the aforementioned social balancing act. In doing so, Foodphoria looks to bring the joy back to eating out with your friends.`}
                         fromDate={"Fall 2017"}
                         skills={[
                             { label: "React JS" },
