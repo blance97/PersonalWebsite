@@ -39,6 +39,22 @@ export default class Projects extends Component {
                         siteLink={"https://digitalreceipt.herokuapp.com/"}
                     />
                     <Project
+                        projectName={'FoodPhoria(Mhacks)'}
+                        projectDescription={`This is a is an web application that allows users to create shareable polls that survey the food preferences of link holders and displays the running results, using these results to eventually drive an AI that provides recommendations on where to eat. These results are only displayed with context to the group, not with details about individuals, thereby avoiding the aforementioned social balancing act. In doing so, Foodphoria looks to bring the joy back to eating out with your friends.`}
+                        fromDate={"Fall 2017"}
+                        skills={[
+                            { label: "React JS" },
+                            { label: "Javascript" },
+                            { label: "Firebase" },
+                            { label: "Google Places API" },
+                            { label: "Python" },
+                            { label: "Heroku" },
+                            { label: "Tensor Flow" }
+                        ]}
+                        githubLink={"https://github.com/blance97/MHacks-X"}
+                        siteLink={"https://foodphoria.herokuapp.com/"}
+                    />
+                    <Project
                         projectName={'Food Poll'}
                         projectDescription={`A poll app that will gather info from people on their food preferences and suggest places based of the results`}
                         fromDate={"Summer 2017 - Present"}
