@@ -42,6 +42,8 @@ export default class Resume extends Component {
       other: [
         { label: 'GIT' },
         { label: 'SVN' },
+        { label: 'Docker' },
+        { label: 'Team City' },
         { label: 'MySQL' },
         { label: 'Firebase' },
         { label: 'Postgresql' },
