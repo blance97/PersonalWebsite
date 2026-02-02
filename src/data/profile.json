@@ -1,0 +1,18 @@
+{
+  "name": "Lance Dinh",
+  "title": "Software Developer",
+  "birthDate": "1997-01-01",
+  "major": "Computer Science",
+  "education": "Rose-Hulman Institute of Technology",
+  "currentEmployment": "Software Developer at American Express",
+  "bio": "Hello! I am a software developer!",
+  "interests": ["Programming", "F1", "Pickleball", "Basketball", "Games", "Swimming"],
+  "notableProjects": ["Digital Receipt", "Food Poll", "EchoFlow", "Off"],
+  "resumeLink": "https://drive.google.com/file/d/1hkNspL6MU_tQzh7mdCTbAg2ifno8SeM4/view?usp=sharing",
+  "schoolLink": "http://www.rose-hulman.edu/",
+  "socialLinks": {
+    "email": "lancedinh7@gmail.com",
+    "github": "https://github.com/blance97",
+    "linkedin": "https://www.linkedin.com/in/lance-dinh/"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "languages": [
+    "JavaScript",
+    "TypeScript",
+    "Node.js",
+    "React/Redux",
+    "React Native",
+    "Python",
+    "Golang",
+    "Java",
+    "C"
+  ],
+  "tools": [
+    "Git",
+    "SVN",
+    "Docker",
+    "Team City",
+    "MySQL",
+    "Firebase",
+    "PostgreSQL",
+    "SQLite",
+    "Heroku",
+    "AWS"
+  ],
+  "coursework": [
+    "Introduction to Databases",
+    "Data Structures and Algorithms",
+    "Object Oriented Design",
+    "Computer Architecture",
+    "Operating Systems",
+    "Computer Security",
+    "Internet of Things"
+  ]
+}

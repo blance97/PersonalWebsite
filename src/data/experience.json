@@ -1,0 +1,62 @@
+[
+  {
+    "id": "amex",
+    "company": "American Express",
+    "position": "Software Developer",
+    "description": "Building enterprise software solutions.",
+    "startDate": "2020",
+    "endDate": "Present",
+    "location": "Phoenix, AZ",
+    "skills": ["Java", "React", "TypeScript", "AWS", "Microservices"],
+    "logo": "",
+    "website": "https://www.americanexpress.com/"
+  },
+  {
+    "id": "verizon",
+    "company": "Verizon Connect",
+    "position": "Software Developer",
+    "description": "● Automated deployment to Octopus Deploy via python.\n● Created docker image and deployed and ran on Kubernetes engine.\n● Built and ran test cases on TeamCity.",
+    "startDate": "Summer 2018",
+    "endDate": "",
+    "location": "Austin, TX",
+    "skills": ["Python", "Pytest", "Octopus Deploy", "Docker", "Kubernetes", "Team City"],
+    "logo": "",
+    "website": "https://www.verizonconnect.com/"
+  },
+  {
+    "id": "linbeck",
+    "company": "Linbeck LLC",
+    "position": "Software Developer",
+    "description": "● Developed a company specific mobile expense report application.\n● Worked react native and redux and made REST calls to company internal endpoints.",
+    "startDate": "Summer 2017",
+    "endDate": "",
+    "location": "Houston, TX",
+    "skills": ["React Native", "JavaScript", "HTML", "CSS", "Google OCR"],
+    "logo": "",
+    "website": "https://www.linbeck.com/"
+  },
+  {
+    "id": "rhventures",
+    "company": "Rose-Hulman Ventures",
+    "position": "Software Engineer",
+    "description": "● Worked with an informed prescribing company to develop a web application to help medical personnel obtain reports about patient's blood status.\n● Use Python with tornado framework with a Postgres database hosted with a Nginx server.",
+    "startDate": "Fall 2016",
+    "endDate": "Spring 2017",
+    "location": "Terre Haute, IN",
+    "skills": ["Python", "Tornado Framework", "JavaScript/jQuery", "HTML", "CSS", "PostgreSQL"],
+    "logo": "",
+    "website": "http://www.rhventures.org/"
+  },
+  {
+    "id": "r1soft",
+    "company": "R1soft",
+    "position": "Software Engineer",
+    "description": "● Create custom Web server using the Go programming language to add security and functionality of internal tools.\n● Handle REST calls with the Golang.\n● Generated databases to store users, roles, and their respective permissions in SQLite3.\n● Created HTML pages to display login screen, user management, and internal tools.",
+    "startDate": "Summer 2016",
+    "endDate": "",
+    "location": "Houston, TX",
+    "skills": ["Golang", "JavaScript", "REST API", "SQLite", "HTML", "CSS"],
+    "logo": "",
+    "website": "https://www.r1soft.com/"
+  }
+]
