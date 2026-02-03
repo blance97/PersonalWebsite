@@ -11,7 +11,6 @@ export default function Header() {
     { path: '/experience', label: 'Experience' },
     { path: '/projects', label: 'Projects' },
     { path: '/resume', label: 'Resume' },
-    { path: '/admin', label: 'Admin' },
   ];
 
   const isActive = (path: string) => {
