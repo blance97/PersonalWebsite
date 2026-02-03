@@ -1,15 +1,12 @@
 import { useState } from 'react';
 import { useContent } from '../context/ContentContext';
-import { useAuth } from '../context/AuthContext';
 import { fetchGitHubRepos, type GitHubRepo } from '../services/github';
 import type { Profile, Experience, Project, Skills, GitHubConfig } from '../types';
-import LoginPage from './LoginPage';
 import styles from './AdminPage.module.css';
 
 type Tab = 'profile' | 'experience' | 'projects' | 'skills' | 'github';
 
 export default function AdminPage() {
-  const { isAuthenticated, logout, userEmail } = useAuth();
   const { content, updateProfile, updateExperience, updateProjects, updateSkills, updateGitHubConfig, resetToDefaults, exportContent } = useContent();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
@@ -18,11 +15,6 @@ export default function AdminPage() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
-
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return <LoginPage onSuccess={() => {}} />;
-  }
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: 'Profile' },
@@ -38,7 +30,6 @@ export default function AdminPage() {
         <div className={styles.header}>
           <div>
             <h1 className={styles.title}>Admin Panel</h1>
-            <p className={styles.userInfo}>Logged in as {userEmail}</p>
           </div>
           <div className={styles.actions}>
             <button onClick={exportContent} className={styles.exportButton}>
@@ -46,9 +37,6 @@ export default function AdminPage() {
             </button>
             <button onClick={resetToDefaults} className={styles.resetButton}>
               Reset to Defaults
-            </button>
-            <button onClick={logout} className={styles.logoutButton}>
-              Logout
             </button>
           </div>
         </div>

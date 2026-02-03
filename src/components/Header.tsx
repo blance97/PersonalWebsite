@@ -1,18 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
 import styles from './Header.module.css';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
 
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/experience', label: 'Experience' },
     { path: '/projects', label: 'Projects' },
     { path: '/resume', label: 'Resume' },
+    { path: '/admin', label: 'Admin' },
   ];
 
   const isActive = (path: string) => {
@@ -38,15 +37,6 @@ export default function Header() {
               {link.label}
             </Link>
           ))}
-          {isAuthenticated && (
-            <Link
-              to="/admin"
-              className={`${styles.navLink} ${styles.adminLink} ${isActive('/admin') ? styles.active : ''}`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Admin
-            </Link>
-          )}
         </nav>
 
         <button
