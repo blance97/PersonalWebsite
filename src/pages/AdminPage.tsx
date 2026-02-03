@@ -10,10 +10,27 @@ export default function AdminPage() {
   const { content, updateProfile, updateExperience, updateProjects, updateSkills, updateGitHubConfig, resetToDefaults, exportContent } = useContent();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const showSavedMessage = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSave = async <T,>(saveFn: (data: T) => Promise<void>, data: T) => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await saveFn(data);
+      showSavedMessage();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save');
+      // Still show saved message since we update locally
+      showSavedMessage();
+    } finally {
+      setSaving(false);
+    }
   };
 
   const tabs: { id: Tab; label: string }[] = [
@@ -43,7 +60,13 @@ export default function AdminPage() {
 
         {saved && (
           <div className={styles.savedMessage}>
-            ✓ Changes saved successfully!
+            ✓ Changes saved{saveError ? ' locally (API unavailable)' : ' successfully'}!
+          </div>
+        )}
+
+        {saving && (
+          <div className={styles.savingMessage}>
+            Saving...
           </div>
         )}
 
@@ -63,32 +86,32 @@ export default function AdminPage() {
           {activeTab === 'profile' && (
             <ProfileEditor
               profile={content.profile}
-              onSave={(profile) => { updateProfile(profile); showSavedMessage(); }}
+              onSave={(profile) => handleSave(updateProfile, profile)}
             />
           )}
           {activeTab === 'experience' && (
             <ExperienceEditor
               experience={content.experience}
-              onSave={(experience) => { updateExperience(experience); showSavedMessage(); }}
+              onSave={(experience) => handleSave(updateExperience, experience)}
             />
           )}
           {activeTab === 'projects' && (
             <ProjectsEditor
               projects={content.projects}
               githubConfig={content.githubConfig}
-              onSave={(projects) => { updateProjects(projects); showSavedMessage(); }}
+              onSave={(projects) => handleSave(updateProjects, projects)}
             />
           )}
           {activeTab === 'skills' && (
             <SkillsEditor
               skills={content.skills}
-              onSave={(skills) => { updateSkills(skills); showSavedMessage(); }}
+              onSave={(skills) => handleSave(updateSkills, skills)}
             />
           )}
           {activeTab === 'github' && (
             <GitHubEditor
               config={content.githubConfig}
-              onSave={(config) => { updateGitHubConfig(config); showSavedMessage(); }}
+              onSave={(config) => handleSave(updateGitHubConfig, config)}
             />
           )}
         </div>

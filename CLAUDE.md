@@ -6,14 +6,22 @@ A modern personal portfolio website built with React 19 + TypeScript + Vite 6. S
 
 ## Tech Stack
 
-### Current Stack (Modernized)
+### Frontend
 - **React**: 19.0.0
 - **React Router**: 7.5.0
 - **TypeScript**: 5.7.0
 - **Build Tool**: Vite 6.0.0
 - **Styling**: CSS Modules with CSS Custom Properties (design system)
 - **State Management**: React Context API
-- **Data Persistence**: localStorage with JSON export/import
+- **Data Persistence**: PostgreSQL via backend API (localStorage as cache/fallback)
+
+### Backend
+- **Runtime**: Node.js 20
+- **Framework**: Express 4.x
+- **Language**: TypeScript 5.7
+- **Database**: PostgreSQL 16
+- **ORM**: Prisma 6.x
+- **Container**: Docker multi-stage build
 
 ### Key Features
 - ✅ Modern React 19 with functional components and hooks
@@ -28,55 +36,59 @@ A modern personal portfolio website built with React 19 + TypeScript + Vite 6. S
 
 ## Commands
 
+### Frontend
 ```bash
-# Development
 npm run dev          # Start Vite dev server
-
-# Build
 npm run build        # TypeScript check + Vite build
-
-# Preview
 npm run preview      # Preview production build
-
-# Lint
 npm run lint         # ESLint check
+```
+
+### Backend
+```bash
+cd backend
+npm run dev          # Start dev server with hot reload
+npm run build        # Build TypeScript
+npm run start        # Run production server
+npm run db:generate  # Generate Prisma client
+npm run db:push      # Push schema to database
+npm run db:seed      # Seed database with initial data
+```
+
+### Docker (Local Development)
+```bash
+docker-compose up    # Start all services (postgres, backend, frontend)
+docker-compose down  # Stop all services
 ```
 
 ## Project Structure
 
 ```
-src/
-├── main.tsx                    # App entry point
-├── App.tsx                     # Root component with routing
-├── App.css                     # Root styles
-├── index.css                   # Global styles & design system
-├── vite-env.d.ts               # Vite type declarations
-├── assets/                     # Images (RoseSeal.png, etc.)
-├── components/
-│   ├── Header.tsx              # Navigation header
-│   ├── Header.module.css
-│   ├── FooterNew.tsx           # Footer with social links
-│   └── Footer.module.css
-├── context/
-│   └── ContentContext.tsx      # Content state management
-├── data/
-│   ├── profile.json            # Personal info
-│   ├── experience.json         # Work history
-│   ├── projects.json           # Project portfolio
-│   └── skills.json             # Technical skills
-├── pages/
-│   ├── HomePage.tsx            # Home/landing page
-│   ├── HomePage.module.css
-│   ├── ExperiencePage.tsx      # Work experience
-│   ├── ExperiencePage.module.css
-│   ├── ProjectsPage.tsx        # Projects showcase
-│   ├── ProjectsPage.module.css
-│   ├── ResumePage.tsx          # Resume & skills
-│   ├── ResumePage.module.css
-│   ├── AdminPage.tsx           # Admin panel
-│   └── AdminPage.module.css
-└── types/
-    └── index.ts                # TypeScript interfaces
+personal-website/
+├── src/                        # Frontend source
+│   ├── main.tsx                # App entry point
+│   ├── App.tsx                 # Root component with routing
+│   ├── context/
+│   │   └── ContentContext.tsx  # Content state (API + localStorage cache)
+│   ├── services/
+│   │   ├── api.ts              # Backend API client
+│   │   └── github.ts           # GitHub API integration
+│   ├── pages/                  # Route components
+│   ├── components/             # Shared components
+│   ├── data/                   # Default JSON data (fallback)
+│   └── types/                  # TypeScript interfaces
+├── backend/                    # Express API
+│   ├── src/
+│   │   ├── index.ts            # Server entry point
+│   │   └── routes/             # API route handlers
+│   ├── prisma/
+│   │   ├── schema.prisma       # Database schema
+│   │   └── seed.ts             # Database seeding
+│   ├── Dockerfile              # Backend container
+│   └── package.json
+├── docker-compose.yml          # Local development stack
+├── Dockerfile                  # Frontend production container
+└── Dockerfile.local            # Frontend local dev (with API proxy)
 ```
 
 ## Modernization Roadmap
@@ -139,15 +151,34 @@ src/
 - [ ] Add contact form
 - [ ] Performance optimization (code splitting, image optimization)
 
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/content | Get all content (profile, experience, projects, skills) |
+| PUT | /api/profile | Update profile |
+| GET | /api/experience | List all experience |
+| PUT | /api/experience | Bulk update experience (with order) |
+| POST | /api/experience | Add new experience |
+| DELETE | /api/experience/:id | Delete experience |
+| GET | /api/projects | List all projects |
+| PUT | /api/projects | Bulk update projects (with order) |
+| POST | /api/projects | Add new project |
+| DELETE | /api/projects/:id | Delete project |
+| PUT | /api/skills | Update skills |
+| GET | /api/github/config | Get GitHub config |
+| PUT | /api/github/config | Update GitHub config |
+| GET | /health | Health check |
+
 ## Admin Panel
 
 ### How It Works
 The admin panel at `/admin` allows you to edit all site content without touching code:
 
-1. **Content is stored in localStorage** - Changes persist in the browser
-2. **Default data from JSON files** - Initial content comes from `src/data/*.json`
-3. **Export functionality** - Download your content as JSON for backup or version control
-4. **Reset to defaults** - Restore original content from JSON files
+1. **Content is persisted to PostgreSQL** - Changes survive deployments
+2. **localStorage as cache/fallback** - Works offline, syncs when API available
+3. **Default data from JSON files** - Used as fallback if API unavailable
+4. **Export functionality** - Download your content as JSON for backup
 
 ### Available Editors
 - **Profile** - Name, title, bio, social links, resume link, etc.
@@ -248,7 +279,24 @@ Use consistent spacing scale: 4px, 8px, 12px, 16px, 24px, 32px, 48px, 64px
 - Playwright for E2E tests
 
 ## Deployment
-- Build with `npm run build`
-- Output in `dist/` directory
-- Deploy to Vercel, Netlify, GitHub Pages, or K8s cluster
-- Use Cloudflare/Route53 for DNS routing
+
+### Local Development
+```bash
+docker-compose up
+# Frontend: http://localhost:3000
+# Backend: http://localhost:8080
+# Database: localhost:5432
+```
+
+### Production (K8s)
+Deployed via ArgoCD to homelab K3s cluster:
+- **Frontend**: nginx serving static React build
+- **Backend**: Node.js Express API
+- **Database**: PostgreSQL StatefulSet with PVC
+- **Auth**: OAuth2-proxy with Google authentication
+- **Routing**: Cloudflare Tunnel
+
+GitHub Actions automatically:
+1. Builds and pushes Docker images to GHCR
+2. Updates image tags in homelab-k3s-cluster repo
+3. ArgoCD syncs changes to the cluster

@@ -1,7 +1,8 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { SiteContent, Profile, Experience, Project, Skills, GitHubConfig } from '../types';
+import { api } from '../services/api';
 
-// Import default data
+// Import default data for fallback
 import defaultProfile from '../data/profile.json';
 import defaultExperience from '../data/experience.json';
 import defaultProjects from '../data/projects.json';
@@ -12,27 +13,30 @@ const STORAGE_KEY = 'personal-website-content';
 
 interface ContentContextType {
   content: SiteContent;
-  updateProfile: (profile: Profile) => void;
-  updateExperience: (experience: Experience[]) => void;
-  updateProjects: (projects: Project[]) => void;
-  updateSkills: (skills: Skills) => void;
-  updateGitHubConfig: (config: GitHubConfig) => void;
+  loading: boolean;
+  error: string | null;
+  updateProfile: (profile: Profile) => Promise<void>;
+  updateExperience: (experience: Experience[]) => Promise<void>;
+  updateProjects: (projects: Project[]) => Promise<void>;
+  updateSkills: (skills: Skills) => Promise<void>;
+  updateGitHubConfig: (config: GitHubConfig) => Promise<void>;
   resetToDefaults: () => void;
   exportContent: () => void;
+  refetch: () => Promise<void>;
 }
 
 const ContentContext = createContext<ContentContextType | null>(null);
 
-const getInitialContent = (): SiteContent => {
-  if (typeof window === 'undefined') {
-    return {
-      profile: defaultProfile as Profile,
-      experience: defaultExperience as Experience[],
-      projects: defaultProjects as Project[],
-      skills: defaultSkills as Skills,
-      githubConfig: defaultGitHubConfig as GitHubConfig,
-    };
-  }
+const getDefaultContent = (): SiteContent => ({
+  profile: defaultProfile as Profile,
+  experience: defaultExperience as Experience[],
+  projects: defaultProjects as Project[],
+  skills: defaultSkills as Skills,
+  githubConfig: defaultGitHubConfig as GitHubConfig,
+});
+
+const getCachedContent = (): SiteContent | null => {
+  if (typeof window === 'undefined') return null;
 
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
@@ -44,56 +48,145 @@ const getInitialContent = (): SiteContent => {
       }
       return parsed;
     } catch {
-      // If parsing fails, return defaults
+      // If parsing fails, return null
     }
   }
-
-  return {
-    profile: defaultProfile as Profile,
-    experience: defaultExperience as Experience[],
-    projects: defaultProjects as Project[],
-    skills: defaultSkills as Skills,
-    githubConfig: defaultGitHubConfig as GitHubConfig,
-  };
+  return null;
 };
 
 export function ContentProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<SiteContent>(getInitialContent);
+  // Initialize with cached content or defaults
+  const [content, setContent] = useState<SiteContent>(() => getCachedContent() || getDefaultContent());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Save to localStorage whenever content changes
+  // Fetch content from API
+  const fetchContent = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await api.getContent();
+      // Only update if we got valid data with a profile
+      if (data && data.profile) {
+        setContent(data);
+        // Cache in localStorage for offline support
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    } catch (err) {
+      console.warn('Failed to fetch content from API, using cached/default data:', err);
+      // Keep using cached or default content
+      setError(err instanceof Error ? err.message : 'Failed to load content');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch content on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
-  }, [content]);
+    fetchContent();
+  }, [fetchContent]);
 
-  const updateProfile = (profile: Profile) => {
-    setContent((prev) => ({ ...prev, profile }));
+  const updateProfile = async (profile: Profile) => {
+    try {
+      const updated = await api.updateProfile(profile);
+      setContent((prev) => {
+        const newContent = { ...prev, profile: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      // Fallback to local update if API fails
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, profile };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
   };
 
-  const updateExperience = (experience: Experience[]) => {
-    setContent((prev) => ({ ...prev, experience }));
+  const updateExperience = async (experience: Experience[]) => {
+    try {
+      const updated = await api.updateExperience(experience);
+      setContent((prev) => {
+        const newContent = { ...prev, experience: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, experience };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
   };
 
-  const updateProjects = (projects: Project[]) => {
-    setContent((prev) => ({ ...prev, projects }));
+  const updateProjects = async (projects: Project[]) => {
+    try {
+      const updated = await api.updateProjects(projects);
+      setContent((prev) => {
+        const newContent = { ...prev, projects: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, projects };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
   };
 
-  const updateSkills = (skills: Skills) => {
-    setContent((prev) => ({ ...prev, skills }));
+  const updateSkills = async (skills: Skills) => {
+    try {
+      const updated = await api.updateSkills(skills);
+      setContent((prev) => {
+        const newContent = { ...prev, skills: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, skills };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
   };
 
-  const updateGitHubConfig = (githubConfig: GitHubConfig) => {
-    setContent((prev) => ({ ...prev, githubConfig }));
+  const updateGitHubConfig = async (githubConfig: GitHubConfig) => {
+    try {
+      const updated = await api.updateGitHubConfig(githubConfig);
+      setContent((prev) => {
+        const newContent = { ...prev, githubConfig: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, githubConfig };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
   };
 
   const resetToDefaults = () => {
-    const defaults: SiteContent = {
-      profile: defaultProfile as Profile,
-      experience: defaultExperience as Experience[],
-      projects: defaultProjects as Project[],
-      skills: defaultSkills as Skills,
-      githubConfig: defaultGitHubConfig as GitHubConfig,
-    };
+    const defaults = getDefaultContent();
     setContent(defaults);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults));
   };
 
   const exportContent = () => {
@@ -113,6 +206,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     <ContentContext.Provider
       value={{
         content,
+        loading,
+        error,
         updateProfile,
         updateExperience,
         updateProjects,
@@ -120,6 +215,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         updateGitHubConfig,
         resetToDefaults,
         exportContent,
+        refetch: fetchContent,
       }}
     >
       {children}

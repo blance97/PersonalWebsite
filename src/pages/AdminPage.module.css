@@ -72,6 +72,17 @@
   font-weight: 500;
 }
 
+.savingMessage {
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 102, 204, 0.1);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+  text-align: center;
+  font-weight: 500;
+}
+
 .tabs {
   display: flex;
   gap: var(--space-2);

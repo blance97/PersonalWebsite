@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id                String   @id @default("singleton")
+  name              String
+  title             String
+  birthDate         String?
+  major             String?
+  education         String?
+  currentEmployment String?
+  bio               String?
+  interests         String[]
+  resumeLink        String?
+  schoolLink        String?
+  email             String?
+  github            String?
+  linkedin          String?
+  notableProjects   String[]
+  updatedAt         DateTime @updatedAt
+}
+
+model Experience {
+  id          String   @id @default(uuid())
+  company     String
+  position    String
+  location    String?
+  startDate   String
+  endDate     String?
+  description String?
+  skills      String[]
+  logo        String?
+  website     String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  date        String?
+  skills      String[]
+  githubLink  String?
+  liveLink    String?
+  image       String?
+  isPrivate   Boolean  @default(false)
+  stars       Int?
+  forks       Int?
+  source      String   @default("manual")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Skills {
+  id         String   @id @default("singleton")
+  languages  String[]
+  tools      String[]
+  coursework String[]
+  updatedAt  DateTime @updatedAt
+}
+
+model GitHubConfig {
+  id             String   @id @default("singleton")
+  username       String?
+  includePrivate Boolean  @default(false)
+  includeForks   Boolean  @default(false)
+  excludeRepos   String[]
+  pinnedRepos    String[]
+  updatedAt      DateTime @updatedAt
+}
