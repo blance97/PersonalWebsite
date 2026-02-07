@@ -1,5 +1,6 @@
-import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
+import type { PrismaClient } from '@prisma/client';
 
 const router = Router();
 
@@ -12,9 +13,13 @@ interface ImageUpload {
   data: string; // Base64 encoded
 }
 
+interface RequestWithPrisma<P = Record<string, string>> extends Request<P> {
+  prisma: PrismaClient;
+}
+
 // GET /api/images - List all images
-router.get('/', async (req: Request, res: Response) => {
-  const prisma: PrismaClient = (req as any).prisma;
+router.get('/', async (req: Request, res: Response): Promise<void> => {
+  const prisma = (req as RequestWithPrisma).prisma;
 
   try {
     const images = await prisma.image.findMany({
@@ -29,15 +34,15 @@ router.get('/', async (req: Request, res: Response) => {
     });
 
     res.json(images);
-  } catch (error) {
-    console.error('Error fetching images:', error);
+  } catch (err) {
+    console.error('Error fetching images:', err);
     res.status(500).json({ error: 'Failed to fetch images' });
   }
 });
 
 // GET /api/images/:id - Get single image (returns base64 data)
-router.get('/:id', async (req: Request, res: Response) => {
-  const prisma: PrismaClient = (req as any).prisma;
+router.get('/:id', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  const prisma = (req as RequestWithPrisma<{ id: string }>).prisma;
   const { id } = req.params;
 
   try {
@@ -58,15 +63,15 @@ router.get('/:id', async (req: Request, res: Response) => {
       size: image.size,
       createdAt: image.createdAt,
     });
-  } catch (error) {
-    console.error('Error fetching image:', error);
+  } catch (err) {
+    console.error('Error fetching image:', err);
     res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
 
 // GET /api/images/:id/raw - Get image as binary (for <img src>)
-router.get('/:id/raw', async (req: Request, res: Response) => {
-  const prisma: PrismaClient = (req as any).prisma;
+router.get('/:id/raw', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  const prisma = (req as RequestWithPrisma<{ id: string }>).prisma;
   const { id } = req.params;
 
   try {
@@ -82,17 +87,17 @@ router.get('/:id/raw', async (req: Request, res: Response) => {
     const buffer = Buffer.from(image.data, 'base64');
     res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Content-Length', buffer.length);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year cache
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
     res.send(buffer);
-  } catch (error) {
-    console.error('Error fetching image:', error);
+  } catch (err) {
+    console.error('Error fetching image:', err);
     res.status(500).json({ error: 'Failed to fetch image' });
   }
 });
 
 // POST /api/images - Upload new image
-router.post('/', async (req: Request, res: Response) => {
-  const prisma: PrismaClient = (req as any).prisma;
+router.post('/', async (req: Request, res: Response): Promise<void> => {
+  const prisma = (req as RequestWithPrisma).prisma;
   const { name, mimeType, data }: ImageUpload = req.body;
 
   if (!name || !mimeType || !data) {
@@ -100,13 +105,11 @@ router.post('/', async (req: Request, res: Response) => {
     return;
   }
 
-  // Validate mime type
   if (!mimeType.startsWith('image/')) {
     res.status(400).json({ error: 'Invalid mime type. Must be an image.' });
     return;
   }
 
-  // Calculate size from base64
   const size = Math.ceil((data.length * 3) / 4);
   if (size > MAX_SIZE) {
     res.status(400).json({ error: `Image too large. Max size is ${MAX_SIZE / 1024 / 1024}MB` });
@@ -131,15 +134,15 @@ router.post('/', async (req: Request, res: Response) => {
       url: `/api/images/${image.id}/raw`,
       createdAt: image.createdAt,
     });
-  } catch (error) {
-    console.error('Error uploading image:', error);
+  } catch (err) {
+    console.error('Error uploading image:', err);
     res.status(500).json({ error: 'Failed to upload image' });
   }
 });
 
 // DELETE /api/images/:id - Delete image
-router.delete('/:id', async (req: Request, res: Response) => {
-  const prisma: PrismaClient = (req as any).prisma;
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  const prisma = (req as RequestWithPrisma<{ id: string }>).prisma;
   const { id } = req.params;
 
   try {
@@ -148,8 +151,8 @@ router.delete('/:id', async (req: Request, res: Response) => {
     });
 
     res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting image:', error);
+  } catch (err) {
+    console.error('Error deleting image:', err);
     res.status(500).json({ error: 'Failed to delete image' });
   }
 });
