@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useContent } from '../context/ContentContext';
 import { fetchGitHubRepos, type GitHubRepo } from '../services/github';
+import { api } from '../services/api';
 import type { Profile, Experience, Project, Skills, GitHubConfig } from '../types';
 import styles from './AdminPage.module.css';
 
@@ -648,14 +649,21 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          updateItem(index, { image: reader.result as string });
-                        };
-                        reader.readAsDataURL(file);
+                        try {
+                          const result = await api.uploadImage(file);
+                          updateItem(index, { image: result.url });
+                        } catch (err) {
+                          console.error('Failed to upload image:', err);
+                          // Fallback to base64 if API fails
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            updateItem(index, { image: reader.result as string });
+                          };
+                          reader.readAsDataURL(file);
+                        }
                       }
                     }}
                     className={styles.fileInput}

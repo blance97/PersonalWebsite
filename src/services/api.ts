@@ -91,4 +91,55 @@ export const api = {
 
   // Health check
   health: (): Promise<{ status: string; timestamp: string }> => fetchWithError('/health'),
+
+  // Images
+  getImages: (): Promise<ImageMeta[]> => fetchWithError(`${API_BASE}/images`),
+
+  uploadImage: (file: File): Promise<ImageUploadResponse> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = (reader.result as string).split(',')[1]; // Remove data:image/...;base64, prefix
+          const result = await fetchWithError<ImageUploadResponse>(`${API_BASE}/images`, {
+            method: 'POST',
+            body: JSON.stringify({
+              name: file.name,
+              mimeType: file.type,
+              data: base64,
+            }),
+          });
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  deleteImage: (id: string): Promise<void> =>
+    fetchWithError(`${API_BASE}/images/${id}`, {
+      method: 'DELETE',
+    }),
+
+  getImageUrl: (id: string): string => `${API_BASE}/images/${id}/raw`,
 };
+
+export interface ImageMeta {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+}
+
+export interface ImageUploadResponse {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}

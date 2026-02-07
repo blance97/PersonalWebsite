@@ -7,13 +7,14 @@ import { experienceRouter } from './routes/experience.js';
 import { projectsRouter } from './routes/projects.js';
 import { skillsRouter } from './routes/skills.js';
 import { githubRouter } from './routes/github.js';
+import { imagesRouter } from './routes/images.js';
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increase limit for image uploads
 
 // Attach prisma to request
 app.use((req, res, next) => {
@@ -33,6 +34,7 @@ app.use('/api/experience', experienceRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/skills', skillsRouter);
 app.use('/api/github', githubRouter);
+app.use('/api/images', imagesRouter);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
