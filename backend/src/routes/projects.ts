@@ -151,7 +151,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/projects/:id - Delete project
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const prisma: PrismaClient = (req as any).prisma;
   const { id } = req.params;
 
