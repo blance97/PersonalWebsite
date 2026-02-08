@@ -8,6 +8,7 @@ import { projectsRouter } from './routes/projects.js';
 import { skillsRouter } from './routes/skills.js';
 import { githubRouter } from './routes/github.js';
 import { imagesRouter } from './routes/images.js';
+import { photosRouter } from './routes/photos.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -35,6 +36,7 @@ app.use('/api/projects', projectsRouter);
 app.use('/api/skills', skillsRouter);
 app.use('/api/github', githubRouter);
 app.use('/api/images', imagesRouter);
+app.use('/api/photos', photosRouter);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

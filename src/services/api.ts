@@ -1,4 +1,4 @@
-import type { SiteContent, Profile, Experience, Project, Skills, GitHubConfig } from '../types';
+import type { SiteContent, Profile, Experience, Project, Skills, GitHubConfig, Photo } from '../types';
 
 const API_BASE = '/api';
 
@@ -125,6 +125,46 @@ export const api = {
     }),
 
   getImageUrl: (id: string): string => `${API_BASE}/images/${id}/raw`,
+
+  // Photos
+  getPhotos: (): Promise<Photo[]> => fetchWithError(`${API_BASE}/photos`),
+
+  updatePhotos: (photos: Photo[]): Promise<Photo[]> =>
+    fetchWithError(`${API_BASE}/photos`, {
+      method: 'PUT',
+      body: JSON.stringify(photos),
+    }),
+
+  uploadPhoto: (file: File, title: string, caption?: string): Promise<Photo> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = (reader.result as string).split(',')[1];
+          const result = await fetchWithError<Photo>(`${API_BASE}/photos`, {
+            method: 'POST',
+            body: JSON.stringify({
+              title,
+              caption,
+              mimeType: file.type,
+              data: base64,
+              size: file.size,
+            }),
+          });
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  deletePhoto: (id: string): Promise<void> =>
+    fetchWithError(`${API_BASE}/photos/${id}`, {
+      method: 'DELETE',
+    }),
 };
 
 export interface ImageMeta {

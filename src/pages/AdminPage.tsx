@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useContent } from '../context/ContentContext';
 import { fetchGitHubRepos, type GitHubRepo } from '../services/github';
 import { api } from '../services/api';
-import type { Profile, Experience, Project, Skills, GitHubConfig } from '../types';
+import type { Profile, Experience, Project, Skills, GitHubConfig, Photo } from '../types';
 import styles from './AdminPage.module.css';
 
-type Tab = 'profile' | 'experience' | 'projects' | 'skills' | 'github';
+type Tab = 'profile' | 'experience' | 'projects' | 'skills' | 'github' | 'photos';
 
 export default function AdminPage() {
-  const { content, updateProfile, updateExperience, updateProjects, updateSkills, updateGitHubConfig, resetToDefaults, exportContent } = useContent();
+  const { content, updateProfile, updateExperience, updateProjects, updateSkills, updateGitHubConfig, updatePhotos, resetToDefaults, exportContent } = useContent();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,10 +34,19 @@ export default function AdminPage() {
     }
   };
 
+  const handleTabClick = (tab: Tab) => {
+    if (tab === activeTab) return;
+    // Simple confirmation when switching tabs
+    if (confirm('Switch tabs? Any unsaved changes will be lost.')) {
+      setActiveTab(tab);
+    }
+  };
+
   const tabs: { id: Tab; label: string }[] = [
     { id: 'profile', label: 'Profile' },
     { id: 'experience', label: 'Experience' },
     { id: 'projects', label: 'Projects' },
+    { id: 'photos', label: 'Photos' },
     { id: 'skills', label: 'Skills' },
     { id: 'github', label: 'GitHub' },
   ];
@@ -76,7 +85,7 @@ export default function AdminPage() {
             <button
               key={tab.id}
               className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabClick(tab.id)}
             >
               {tab.label}
             </button>
@@ -115,6 +124,12 @@ export default function AdminPage() {
               onSave={(config) => handleSave(updateGitHubConfig, config)}
             />
           )}
+          {activeTab === 'photos' && (
+            <PhotosEditor
+              photos={content.photos}
+              onSave={(photos) => handleSave(updatePhotos, photos)}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -124,6 +139,9 @@ export default function AdminPage() {
 // Profile Editor Component
 function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Profile) => void }) {
   const [formData, setFormData] = useState<Profile>(profile);
+  // Store raw string inputs for comma-separated fields to allow typing
+  const [interestsInput, setInterestsInput] = useState(profile.interests.join(', '));
+  const [notableProjectsInput, setNotableProjectsInput] = useState(profile.notableProjects.join(', '));
 
   const handleChange = (field: keyof Profile, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -136,13 +154,21 @@ function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Prof
     }));
   };
 
-  const handleArrayChange = (field: 'interests' | 'notableProjects', value: string) => {
-    const array = value.split(',').map((s) => s.trim()).filter(Boolean);
-    setFormData((prev) => ({ ...prev, [field]: array }));
+  const parseCommaSeparated = (value: string): string[] => {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  };
+
+  const handleSave = () => {
+    const dataToSave = {
+      ...formData,
+      interests: parseCommaSeparated(interestsInput),
+      notableProjects: parseCommaSeparated(notableProjectsInput),
+    };
+    onSave(dataToSave);
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className={styles.form}>
+    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className={styles.form}>
       <div className={styles.formGrid}>
         <div className={styles.formGroup}>
           <label>Name</label>
@@ -212,8 +238,8 @@ function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Prof
         <label>Interests (comma-separated)</label>
         <input
           type="text"
-          value={formData.interests.join(', ')}
-          onChange={(e) => handleArrayChange('interests', e.target.value)}
+          value={interestsInput}
+          onChange={(e) => setInterestsInput(e.target.value)}
         />
       </div>
 
@@ -221,8 +247,8 @@ function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Prof
         <label>Notable Projects (comma-separated)</label>
         <input
           type="text"
-          value={formData.notableProjects.join(', ')}
-          onChange={(e) => handleArrayChange('notableProjects', e.target.value)}
+          value={notableProjectsInput}
+          onChange={(e) => setNotableProjectsInput(e.target.value)}
         />
       </div>
 
@@ -283,6 +309,10 @@ function ProfileEditor({ profile, onSave }: { profile: Profile; onSave: (p: Prof
 function ExperienceEditor({ experience, onSave }: { experience: Experience[]; onSave: (e: Experience[]) => void }) {
   const [items, setItems] = useState<Experience[]>(experience);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // Track raw skills input per item to allow typing commas
+  const [skillsInputs, setSkillsInputs] = useState<Record<string, string>>(
+    () => Object.fromEntries(experience.map((e) => [e.id, e.skills.join(', ')]))
+  );
 
   const addNew = () => {
     const newItem: Experience = {
@@ -298,11 +328,28 @@ function ExperienceEditor({ experience, onSave }: { experience: Experience[]; on
       website: '',
     };
     setItems([newItem, ...items]);
+    setSkillsInputs((prev) => ({ ...prev, [newItem.id]: '' }));
     setEditingIndex(0);
   };
 
   const updateItem = (index: number, updates: Partial<Experience>) => {
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...updates } : item)));
+  };
+
+  const updateSkillsInput = (id: string, value: string) => {
+    setSkillsInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const parseCommaSeparated = (value: string): string[] => {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  };
+
+  const handleSave = () => {
+    const itemsToSave = items.map((item) => ({
+      ...item,
+      skills: parseCommaSeparated(skillsInputs[item.id] || ''),
+    }));
+    onSave(itemsToSave);
   };
 
   const deleteItem = (index: number) => {
@@ -323,7 +370,7 @@ function ExperienceEditor({ experience, onSave }: { experience: Experience[]; on
     <div className={styles.listEditor}>
       <div className={styles.listHeader}>
         <button onClick={addNew} className={styles.addButton}>+ Add Experience</button>
-        <button onClick={() => onSave(items)} className={styles.saveButton}>Save All</button>
+        <button onClick={handleSave} className={styles.saveButton}>Save All</button>
       </div>
 
       {items.map((item, index) => (
@@ -407,8 +454,8 @@ function ExperienceEditor({ experience, onSave }: { experience: Experience[]; on
                 <label>Skills (comma-separated)</label>
                 <input
                   type="text"
-                  value={item.skills.join(', ')}
-                  onChange={(e) => updateItem(index, { skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                  value={skillsInputs[item.id] || ''}
+                  onChange={(e) => updateSkillsInput(item.id, e.target.value)}
                 />
               </div>
             </div>
@@ -430,6 +477,26 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
   const [showImport, setShowImport] = useState(false);
   const [githubRepos, setGithubRepos] = useState<GitHubRepo[]>([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
+  // Track raw skills input per item to allow typing commas
+  const [skillsInputs, setSkillsInputs] = useState<Record<string, string>>(
+    () => Object.fromEntries(projects.map((p) => [p.id, p.skills.join(', ')]))
+  );
+
+  const updateSkillsInput = (id: string, value: string) => {
+    setSkillsInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const parseCommaSeparated = (value: string): string[] => {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  };
+
+  const handleSave = () => {
+    const itemsToSave = items.map((item) => ({
+      ...item,
+      skills: parseCommaSeparated(skillsInputs[item.id] || ''),
+    }));
+    onSave(itemsToSave);
+  };
 
   const fetchReposForImport = async () => {
     if (!githubConfig.username) return;
@@ -452,15 +519,16 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
   };
 
   const importRepo = (repo: GitHubRepo) => {
+    const skills = [
+      ...(repo.language ? [repo.language] : []),
+      ...repo.topics.slice(0, 5),
+    ];
     const newProject: Project = {
       id: `github-${repo.id}`,
       name: repo.name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       description: repo.description || 'No description available',
       date: new Date(repo.created_at).getFullYear().toString(),
-      skills: [
-        ...(repo.language ? [repo.language] : []),
-        ...repo.topics.slice(0, 5),
-      ],
+      skills,
       githubLink: repo.html_url,
       liveLink: repo.homepage || '',
       image: '',
@@ -469,6 +537,7 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
       source: 'github',
     };
     setItems([newProject, ...items]);
+    setSkillsInputs((prev) => ({ ...prev, [newProject.id]: skills.join(', ') }));
     setGithubRepos(prev => prev.filter(r => r.id !== repo.id));
   };
 
@@ -484,6 +553,7 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
       image: '',
     };
     setItems([newItem, ...items]);
+    setSkillsInputs((prev) => ({ ...prev, [newItem.id]: '' }));
     setEditingIndex(0);
   };
 
@@ -517,7 +587,7 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
             {showImport ? '✕ Close Import' : '📥 Import from GitHub'}
           </button>
         </div>
-        <button onClick={() => onSave(items)} className={styles.saveButton}>Save All</button>
+        <button onClick={handleSave} className={styles.saveButton}>Save All</button>
       </div>
 
       {/* Import from GitHub Section */}
@@ -627,8 +697,8 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
                 <label>Skills (comma-separated)</label>
                 <input
                   type="text"
-                  value={item.skills.join(', ')}
-                  onChange={(e) => updateItem(index, { skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                  value={skillsInputs[item.id] || ''}
+                  onChange={(e) => updateSkillsInput(item.id, e.target.value)}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -688,20 +758,30 @@ function ProjectsEditor({ projects, githubConfig, onSave }: {
 
 // Skills Editor Component
 function SkillsEditor({ skills, onSave }: { skills: Skills; onSave: (s: Skills) => void }) {
-  const [formData, setFormData] = useState<Skills>(skills);
+  // Store raw string inputs to allow typing commas
+  const [languagesInput, setLanguagesInput] = useState(skills.languages.join(', '));
+  const [toolsInput, setToolsInput] = useState(skills.tools.join(', '));
+  const [courseworkInput, setCourseworkInput] = useState(skills.coursework.join(', '));
 
-  const handleArrayChange = (field: keyof Skills, value: string) => {
-    const array = value.split(',').map((s) => s.trim()).filter(Boolean);
-    setFormData((prev) => ({ ...prev, [field]: array }));
+  const parseCommaSeparated = (value: string): string[] => {
+    return value.split(',').map((s) => s.trim()).filter(Boolean);
+  };
+
+  const handleSave = () => {
+    onSave({
+      languages: parseCommaSeparated(languagesInput),
+      tools: parseCommaSeparated(toolsInput),
+      coursework: parseCommaSeparated(courseworkInput),
+    });
   };
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className={styles.form}>
+    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className={styles.form}>
       <div className={styles.formGroup}>
         <label>Languages & Frameworks (comma-separated)</label>
         <textarea
-          value={formData.languages.join(', ')}
-          onChange={(e) => handleArrayChange('languages', e.target.value)}
+          value={languagesInput}
+          onChange={(e) => setLanguagesInput(e.target.value)}
           rows={3}
         />
       </div>
@@ -709,8 +789,8 @@ function SkillsEditor({ skills, onSave }: { skills: Skills; onSave: (s: Skills) 
       <div className={styles.formGroup}>
         <label>Tools & Technologies (comma-separated)</label>
         <textarea
-          value={formData.tools.join(', ')}
-          onChange={(e) => handleArrayChange('tools', e.target.value)}
+          value={toolsInput}
+          onChange={(e) => setToolsInput(e.target.value)}
           rows={3}
         />
       </div>
@@ -718,8 +798,8 @@ function SkillsEditor({ skills, onSave }: { skills: Skills; onSave: (s: Skills) 
       <div className={styles.formGroup}>
         <label>Coursework (comma-separated)</label>
         <textarea
-          value={formData.coursework.join(', ')}
-          onChange={(e) => handleArrayChange('coursework', e.target.value)}
+          value={courseworkInput}
+          onChange={(e) => setCourseworkInput(e.target.value)}
           rows={3}
         />
       </div>
@@ -802,6 +882,150 @@ function GitHubEditor({ config, onSave }: {
       <button type="button" onClick={() => onSave(formData)} className={styles.saveButton}>
         Save GitHub Settings
       </button>
+    </div>
+  );
+}
+
+// Photos Editor Component
+function PhotosEditor({ photos, onSave }: {
+  photos: Photo[];
+  onSave: (p: Photo[]) => void;
+}) {
+  const [items, setItems] = useState<Photo[]>(photos);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const newPhoto = await api.uploadPhoto(file, 'New Photo', '');
+      setItems([newPhoto, ...items]);
+      setEditingIndex(0);
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+      alert('Failed to upload photo. Please try again.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const updateItem = (index: number, updates: Partial<Photo>) => {
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...updates } : item)));
+  };
+
+  const deleteItem = async (index: number) => {
+    if (!confirm('Are you sure you want to delete this photo?')) return;
+
+    const photo = items[index];
+    try {
+      await api.deletePhoto(photo.id);
+      setItems((prev) => prev.filter((_, i) => i !== index));
+      if (editingIndex === index) setEditingIndex(null);
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      alert('Failed to delete photo. Please try again.');
+    }
+  };
+
+  const moveItem = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= items.length) return;
+    const newItems = [...items];
+    [newItems[index], newItems[newIndex]] = [newItems[newIndex], newItems[index]];
+    setItems(newItems);
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  return (
+    <div className={styles.listEditor}>
+      <div className={styles.listHeader}>
+        <div className={styles.headerButtons}>
+          <label className={styles.addButton} style={{ cursor: uploading ? 'wait' : 'pointer' }}>
+            {uploading ? 'Uploading...' : '+ Upload Photo'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              disabled={uploading}
+              style={{ display: 'none' }}
+            />
+          </label>
+        </div>
+        <button onClick={() => onSave(items)} className={styles.saveButton}>Save All</button>
+      </div>
+
+      {items.length === 0 && (
+        <div className={styles.emptyText}>
+          No photos yet. Click "Upload Photo" to add your first photo.
+        </div>
+      )}
+
+      {items.map((item, index) => (
+        <div key={item.id} className={styles.listItem}>
+          <div className={styles.listItemHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+              <div className={styles.imagePreview} style={{ width: '60px', height: '60px', margin: 0 }}>
+                <img
+                  src={item.url}
+                  alt={item.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }}
+                />
+              </div>
+              <div>
+                <h4>{item.title}</h4>
+                <p className={styles.listItemSubtitle}>
+                  {item.caption || 'No caption'} {item.createdAt && `• ${formatDate(item.createdAt)}`}
+                </p>
+              </div>
+            </div>
+            <div className={styles.listItemActions}>
+              <button onClick={() => moveItem(index, 'up')} disabled={index === 0}>↑</button>
+              <button onClick={() => moveItem(index, 'down')} disabled={index === items.length - 1}>↓</button>
+              <button onClick={() => setEditingIndex(editingIndex === index ? null : index)}>
+                {editingIndex === index ? 'Close' : 'Edit'}
+              </button>
+              <button onClick={() => deleteItem(index)} className={styles.deleteButton}>Delete</button>
+            </div>
+          </div>
+
+          {editingIndex === index && (
+            <div className={styles.listItemEditor}>
+              <div className={styles.formGrid}>
+                <div className={styles.formGroup}>
+                  <label>Title</label>
+                  <input
+                    type="text"
+                    value={item.title}
+                    onChange={(e) => updateItem(index, { title: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Caption</label>
+                <textarea
+                  value={item.caption || ''}
+                  onChange={(e) => updateItem(index, { caption: e.target.value })}
+                  rows={3}
+                  placeholder="Add a caption for this photo..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

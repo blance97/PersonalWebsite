@@ -10,6 +10,7 @@ export default function Header() {
     { path: '/', label: 'Home' },
     { path: '/experience', label: 'Experience' },
     { path: '/projects', label: 'Projects' },
+    { path: '/photos', label: 'Photos' },
     { path: '/resume', label: 'Resume' },
   ];
 

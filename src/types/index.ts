@@ -60,10 +60,19 @@ export interface GitHubConfig {
   pinnedRepos: string[];
 }
 
+export interface Photo {
+  id: string;
+  title: string;
+  caption?: string;
+  url: string;
+  createdAt?: string;
+}
+
 export interface SiteContent {
   profile: Profile;
   experience: Experience[];
   projects: Project[];
   skills: Skills;
   githubConfig: GitHubConfig;
+  photos: Photo[];
 }

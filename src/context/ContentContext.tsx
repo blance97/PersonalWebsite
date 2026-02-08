@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { SiteContent, Profile, Experience, Project, Skills, GitHubConfig } from '../types';
+import type { SiteContent, Profile, Experience, Project, Skills, GitHubConfig, Photo } from '../types';
 import { api } from '../services/api';
 
 // Import default data for fallback
@@ -8,6 +8,7 @@ import defaultExperience from '../data/experience.json';
 import defaultProjects from '../data/projects.json';
 import defaultSkills from '../data/skills.json';
 import defaultGitHubConfig from '../data/github-config.json';
+import defaultPhotos from '../data/photos.json';
 
 const STORAGE_KEY = 'personal-website-content';
 
@@ -20,6 +21,7 @@ interface ContentContextType {
   updateProjects: (projects: Project[]) => Promise<void>;
   updateSkills: (skills: Skills) => Promise<void>;
   updateGitHubConfig: (config: GitHubConfig) => Promise<void>;
+  updatePhotos: (photos: Photo[]) => Promise<void>;
   resetToDefaults: () => void;
   exportContent: () => void;
   refetch: () => Promise<void>;
@@ -33,6 +35,7 @@ const getDefaultContent = (): SiteContent => ({
   projects: defaultProjects as Project[],
   skills: defaultSkills as Skills,
   githubConfig: defaultGitHubConfig as GitHubConfig,
+  photos: defaultPhotos as Photo[],
 });
 
 const getCachedContent = (): SiteContent | null => {
@@ -45,6 +48,10 @@ const getCachedContent = (): SiteContent | null => {
       // Ensure githubConfig exists (for backwards compatibility)
       if (!parsed.githubConfig) {
         parsed.githubConfig = defaultGitHubConfig;
+      }
+      // Ensure photos exists (for backwards compatibility)
+      if (!parsed.photos) {
+        parsed.photos = defaultPhotos;
       }
       return parsed;
     } catch {
@@ -183,6 +190,25 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updatePhotos = async (photos: Photo[]) => {
+    try {
+      const updated = await api.updatePhotos(photos);
+      setContent((prev) => {
+        const newContent = { ...prev, photos: updated };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+    } catch (err) {
+      console.warn('API update failed, updating locally:', err);
+      setContent((prev) => {
+        const newContent = { ...prev, photos };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newContent));
+        return newContent;
+      });
+      throw err;
+    }
+  };
+
   const resetToDefaults = () => {
     const defaults = getDefaultContent();
     setContent(defaults);
@@ -213,6 +239,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         updateProjects,
         updateSkills,
         updateGitHubConfig,
+        updatePhotos,
         resetToDefaults,
         exportContent,
         refetch: fetchContent,
