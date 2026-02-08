@@ -76,6 +76,10 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       const data = await api.getContent();
       // Only update if we got valid data with a profile
       if (data && data.profile) {
+        // Ensure photos exists (API might not include it yet)
+        if (!data.photos) {
+          data.photos = [];
+        }
         setContent(data);
         // Cache in localStorage for offline support
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

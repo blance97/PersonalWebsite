@@ -8,24 +8,30 @@ router.get('/', async (req: Request, res: Response) => {
   const prisma: PrismaClient = (req as any).prisma;
 
   try {
-    const [profile, experience, projects, skills, githubConfig, photos] = await Promise.all([
+    const [profile, experience, projects, skills, githubConfig] = await Promise.all([
       prisma.profile.findUnique({ where: { id: 'singleton' } }),
       prisma.experience.findMany({ orderBy: { sortOrder: 'asc' } }),
       prisma.project.findMany({ orderBy: { sortOrder: 'asc' } }),
       prisma.skills.findUnique({ where: { id: 'singleton' } }),
       prisma.gitHubConfig.findUnique({ where: { id: 'singleton' } }),
-      prisma.personalPhoto.findMany({
+    ]);
+
+    // Fetch photos separately to handle case where table doesn't exist yet
+    let photos: { id: string; title: string; caption: string | null; createdAt: Date }[] = [];
+    try {
+      photos = await prisma.personalPhoto.findMany({
         orderBy: { sortOrder: 'asc' },
         select: {
           id: true,
           title: true,
           caption: true,
-          mimeType: true,
-          size: true,
           createdAt: true,
         },
-      }),
-    ]);
+      });
+    } catch {
+      // Table might not exist yet, ignore error
+      console.log('PersonalPhoto table not available, skipping photos');
+    }
 
     // Transform to match frontend types
     const content = {
